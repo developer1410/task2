@@ -66,24 +66,4 @@ class DepositService
             ]);
         });
     }
-
-    /**
-     * Add percents to deposit
-     * @param $deposit_id
-     */
-    public function addPercentsToDeposit($deposit_id) {
-        $deposit = Deposit::find($deposit_id);
-        $amount = $deposit->accrue;
-        $deposit->increment('invested', $amount, [
-            'accrue_times' => $deposit->accrue_times++
-        ]);
-
-        $deposit->user->transactions()->create([
-            'type' => Transaction::TYPE_ADD_PERCENTS,
-            'amount' => $amount,
-            'deposit_id' => $deposit->id
-        ]);
-
-    }
-
 }

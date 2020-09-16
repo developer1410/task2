@@ -14,7 +14,7 @@ class AddDepositPercentageCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'deposit:percent {deposit_id}';
+    protected $signature = 'deposit:accrue';
 
     /**
      * The console command description.
@@ -40,9 +40,25 @@ class AddDepositPercentageCommand extends Command
      */
     public function handle()
     {
-        $deposit = Deposit::find($this->argument('deposit_id'));
+        $deposits = Deposit::where('accrue_times', '<', 10)->get();
 
-        // Todo finish this
+        if($deposits->count()) {
+            foreach($deposits as $deposit) {
+                $amount = $deposit->accrue;
+                $times = $deposit->accrue_times + 1;
+
+                $deposit->increment('invested', $amount, [
+                    'accrue_times' => $times
+                ]);
+
+                $deposit->user->transactions()->create([
+                    'type' => Transaction::TYPE_ADD_PERCENTS,
+                    'amount' => $amount,
+                    'deposit_id' => $deposit->id
+                ]);
+                $this->info("Percents: $amount was added to deposit with id: $deposit->id");
+            }
+        }
 
         return 0;
     }
